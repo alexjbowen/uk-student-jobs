@@ -1,0 +1,12 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <text
+    x="12"
+    y="16"
+    text-anchor="middle"
+    font-size="16"
+    fill="#00DAEE"
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  >
+    £
+  </text>
+</svg>
