@@ -1,7 +1,9 @@
 // app/jobs/[slug]/page.tsx
 
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AddToTrackerButton } from "@/components/add-to-tracker-button";
 import { getJobBySlug } from "@/app/lib/jobs-data";
 
 type JobPageProps = {
@@ -16,24 +18,7 @@ export default async function JobPage({ params }: JobPageProps) {
     notFound();
   }
 
-  const helpfulLinks = [
-    {
-      label: `${job.company} careers site`,
-      href: job.applyUrl || "#",
-    },
-    {
-      label: `${job.company} LinkedIn`,
-      href: "#",
-    },
-    {
-      label: "Glassdoor reviews",
-      href: "#",
-    },
-    {
-      label: "Interview tips (coming soon)",
-      href: "#",
-    },
-  ];
+  const helpfulLinks = job.helpfulLinks ?? [];
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50">
@@ -70,12 +55,7 @@ export default async function JobPage({ params }: JobPageProps) {
                 </a>
               )}
 
-              <Link
-                href="/"
-                className="rounded-full border border-slate-700 px-4 py-2 text-sm text-slate-200 hover:border-[#00DAEE]"
-              >
-                Add to tracker (coming soon)
-              </Link>
+              <AddToTrackerButton jobSlug={job.slug} />
 
               <Link
                 href={`/?tab=ask-ai&job=${job.slug}`}
@@ -96,13 +76,43 @@ export default async function JobPage({ params }: JobPageProps) {
           {/* LEFT: JOB DESCRIPTION */}
           <div>
             {job.description && (
-              <section className="rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-4">
-                <h2 className="mb-2 text-sm font-semibold text-slate-100">
-                  Job description
-                </h2>
-                <p className="whitespace-pre-line text-sm text-slate-200">
-                  {job.description}
-                </p>
+              <section className="rounded-2xl border border-slate-800/70 bg-slate-900/60 px-4 py-4">
+                {job.roleSummaryHtml && (
+                  <div className="mb-3 rounded-xl border border-slate-800/60 bg-slate-950/40 px-3 py-3">
+                    <div className="flex items-center gap-2">
+                      <Image
+                        src="/icons/aiStar.svg"
+                        alt="AI summary"
+                        width={26}
+                        height={26}
+                        className="-translate-x-0.5 -translate-y-0.5 opacity-80"
+                      />
+                      <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                        AI summary
+                      </p>
+                    </div>
+                    <div
+                      className="mt-2 text-sm leading-relaxed text-slate-100
+            [&_p]:mb-5
+              [&_h2]:mt-6 [&_h2]:mb-3
+              [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-6
+              [&_li]:mb-2
+              leading-relaxed"
+                      dangerouslySetInnerHTML={{
+                        __html: job.roleSummaryHtml,
+                      }}
+                    />
+                  </div>
+                )}
+                <div
+                  className="prose prose-invert max-w-none text-sm text-slate-200
+              [&_p]:mb-5
+              [&_h2]:mt-6 [&_h2]:mb-3
+              [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-6
+              [&_li]:mb-2
+              leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: job.description ?? "" }}
+                />
               </section>
             )}
           </div>
@@ -127,6 +137,10 @@ export default async function JobPage({ params }: JobPageProps) {
                   <span className="text-slate-400">Salary</span>
                   <span>💰 {job.salary}</span>
                 </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-slate-400">Date opened</span>
+                  <span>📅 {job.releaseDate}</span>
+                </div>
                 {job.deadline && (
                   <div className="flex items-center justify-between gap-4">
                     <span className="text-slate-400">Deadline</span>
@@ -141,21 +155,27 @@ export default async function JobPage({ params }: JobPageProps) {
               <h2 className="mb-3 text-sm font-semibold text-slate-100">
                 Useful links
               </h2>
-              <ul className="space-y-2">
-                {helpfulLinks.map((link) => (
-                  <li key={link.label}>
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-2 text-slate-200 hover:text-[#00DAEE]"
-                    >
-                      <span>↗</span>
-                      <span>{link.label}</span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              {helpfulLinks.length > 0 ? (
+                <ul className="space-y-2">
+                  {helpfulLinks.map((link) => (
+                    <li key={link.label}>
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 text-slate-200 hover:text-[#00DAEE]"
+                      >
+                        <span>↗</span>
+                        <span>{link.label}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-slate-400">
+                  Useful links coming soon.
+                </p>
+              )}
             </section>
           </aside>
         </div>
