@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { todaysJobs, type Job } from "@/app/lib/jobs-data";
 import { AddToTrackerButton } from "@/components/add-to-tracker-button";
 
@@ -113,19 +113,48 @@ const FILTER_GROUPS = [
   },
 ];
 
-const ALL_SUB_FILTER_IDS = FILTER_GROUPS.flatMap((group) =>
-  group.subFilters.map((sub) => sub.id),
-);
+type Segment = "finance" | "technology" | "engineering";
+
+const SEGMENT_GROUPS: Record<Segment, string[]> = {
+  finance: ["finance", "consulting"],
+  technology: ["technology"],
+  engineering: ["engineering"],
+};
+
+function filterIdsForSegment(segment: Segment) {
+  return FILTER_GROUPS.filter((group) =>
+    SEGMENT_GROUPS[segment].includes(group.id),
+  ).flatMap((group) => group.subFilters.map((sub) => sub.id));
+}
 
 export default function TrackerPage() {
   const router = useRouter();
+  const [segment, setSegment] = useState<Segment>("finance");
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(
-    new Set(ALL_SUB_FILTER_IDS),
+    () => new Set(filterIdsForSegment("finance")),
   );
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  const visibleGroups = useMemo(
+    () =>
+      FILTER_GROUPS.filter((group) =>
+        SEGMENT_GROUPS[segment].includes(group.id),
+      ),
+    [segment],
+  );
+
+  const visibleFilterIds = useMemo(
+    () => filterIdsForSegment(segment),
+    [segment],
+  );
+
+  useEffect(() => {
+    setSelectedFilters(new Set(visibleFilterIds));
+    setExpandedGroups(new Set());
+  }, [visibleFilterIds]);
 
   const isReleaseToday = (releaseDate: string) => {
     const release = new Date(releaseDate);
@@ -248,102 +277,74 @@ export default function TrackerPage() {
             </p>
           </div>
 
-          <div className="relative text-xs sm:text-sm">
-            <button
-              type="button"
-              onClick={() => setIsFilterMenuOpen((prev) => !prev)}
-              className="rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-slate-200 hover:border-[#00DAEE] hover:text-[#00DAEE] flex items-center gap-2"
-            >
-              <span>Filter sectors</span>
-              <span className="text-[11px] text-slate-400">
-                ({selectedFilters.size}/{ALL_SUB_FILTER_IDS.length})
-              </span>
-              <span aria-hidden>{isFilterMenuOpen ? "▲" : "▼"}</span>
-            </button>
+          <div className="flex flex-col gap-2 text-xs sm:text-sm sm:items-end">
+            <div className="flex gap-2">
+              {(["finance", "technology", "engineering"] as Segment[]).map(
+                (key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSegment(key)}
+                    className={`rounded-full border px-4 py-2 transition ${
+                      segment === key
+                        ? "border-[#00DAEE] text-[#00DAEE]"
+                        : "border-slate-700 text-slate-300 hover:border-[#00DAEE]"
+                    }`}
+                  >
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </button>
+                ),
+              )}
+            </div>
 
-            {isFilterMenuOpen && (
-              <div className="absolute right-0 z-20 mt-2 w-72 rounded-2xl border border-slate-800 bg-slate-900/95 p-4 text-xs text-slate-200 shadow-lg space-y-3">
-                <button
-                  type="button"
-                  className="w-full rounded-lg border border-slate-700 px-3 py-2 text-left text-[11px] uppercase tracking-wide text-slate-300 hover:border-[#00DAEE]"
-                  onClick={() => {
-                  const allSelected =
-                    selectedFilters.size === ALL_SUB_FILTER_IDS.length;
-                  setSelectedFilters(
-                    allSelected ? new Set() : new Set(ALL_SUB_FILTER_IDS),
-                  );
-                }}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsFilterMenuOpen((prev) => !prev)}
+                className="rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-slate-200 hover:border-[#00DAEE] hover:text-[#00DAEE] flex items-center gap-2"
               >
-                {selectedFilters.size === ALL_SUB_FILTER_IDS.length
-                  ? "Deselect all"
-                  : "Select all"}
+                <span>Filter sectors</span>
+                <span className="text-[11px] text-slate-400">
+                  ({selectedFilters.size}/{visibleFilterIds.length})
+                </span>
+                <span aria-hidden>{isFilterMenuOpen ? "▲" : "▼"}</span>
               </button>
 
-                <div className="space-y-2">
-                  {FILTER_GROUPS.map((group) => {
-                    const selectedInGroup = group.subFilters.filter((sub) =>
-                      selectedFilters.has(sub.id),
-                    ).length;
-                    const allSelected =
-                      selectedInGroup === group.subFilters.length;
-                    const partiallySelected =
-                      selectedInGroup > 0 && !allSelected;
-                    const expanded = expandedGroups.has(group.id);
+              {isFilterMenuOpen && (
+                <div className="absolute right-0 z-20 mt-2 w-72 rounded-2xl border border-slate-800 bg-slate-900/95 p-4 text-xs text-slate-200 shadow-lg space-y-3">
+                  <button
+                    type="button"
+                    className="w-full rounded-lg border border-slate-700 px-3 py-2 text-left text-[11px] uppercase tracking-wide text-slate-300 hover:border-[#00DAEE]"
+                    onClick={() => {
+                      const allSelected =
+                        selectedFilters.size === visibleFilterIds.length;
+                      setSelectedFilters(
+                        allSelected ? new Set() : new Set(visibleFilterIds),
+                      );
+                    }}
+                  >
+                    {selectedFilters.size === visibleFilterIds.length
+                      ? "Deselect all"
+                      : "Select all"}
+                  </button>
 
-                    return (
-                      <div
-                        key={group.id}
-                        className="rounded-xl border border-slate-800/80 bg-slate-900/60 px-2 py-2"
-                      >
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            className="flex h-5 w-5 items-center justify-center rounded border border-slate-600 text-[12px]"
-                            aria-label={`Select ${group.label}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedFilters((prev) => {
-                                const next = new Set(prev);
-                                if (allSelected) {
-                                  group.subFilters.forEach((sub) =>
-                                    next.delete(sub.id),
-                                  );
-                                } else {
-                                  group.subFilters.forEach((sub) =>
-                                    next.add(sub.id),
-                                  );
-                                }
-                                return next;
-                              });
-                            }}
-                          >
-                            {allSelected ? "✓" : partiallySelected ? "–" : ""}
-                          </button>
-                          <button
-                            type="button"
-                            className="flex flex-1 items-center justify-between text-left"
-                            onClick={() => {
-                              setExpandedGroups((prev) => {
-                                const next = new Set(prev);
-                                if (next.has(group.id)) {
-                                  next.delete(group.id);
-                                } else {
-                                  next.add(group.id);
-                                }
-                                return next;
-                              });
-                            }}
-                          >
-                            <span>{group.label}</span>
-                            <span className="text-[10px] text-slate-400">
-                              ({selectedInGroup}/{group.subFilters.length}){" "}
-                              {expanded ? "▲" : "▼"}
-                            </span>
-                          </button>
-                        </div>
+                  <div className="space-y-2">
+                    {visibleGroups.map((group) => {
+                      const selectedInGroup = group.subFilters.filter((sub) =>
+                        selectedFilters.has(sub.id),
+                      ).length;
+                      const allSelected =
+                        selectedInGroup === group.subFilters.length;
+                      const partiallySelected =
+                        selectedInGroup > 0 && !allSelected;
+                      const expanded = expandedGroups.has(group.id);
+                      const flatten =
+                        visibleGroups.length === 1 &&
+                        (segment === "technology" || segment === "engineering");
 
-                        {expanded && (
-                          <div className="mt-2 space-y-1 pl-7">
+                      if (flatten) {
+                        return (
+                          <div key={group.id} className="space-y-1">
                             {group.subFilters.map((sub) => {
                               const checked = selectedFilters.has(sub.id);
                               return (
@@ -372,13 +373,99 @@ export default function TrackerPage() {
                               );
                             })}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                        );
+                      }
+
+                      return (
+                        <div
+                          key={group.id}
+                          className="rounded-xl border border-slate-800/80 bg-slate-900/60 px-2 py-2"
+                        >
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              className="flex h-5 w-5 items-center justify-center rounded border border-slate-600 text-[12px]"
+                              aria-label={`Select ${group.label}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedFilters((prev) => {
+                                  const next = new Set(prev);
+                                  if (allSelected) {
+                                    group.subFilters.forEach((sub) =>
+                                      next.delete(sub.id),
+                                    );
+                                  } else {
+                                    group.subFilters.forEach((sub) =>
+                                      next.add(sub.id),
+                                    );
+                                  }
+                                  return next;
+                                });
+                              }}
+                            >
+                              {allSelected ? "✓" : partiallySelected ? "–" : ""}
+                            </button>
+                            <button
+                              type="button"
+                              className="flex flex-1 items-center justify-between text-left"
+                              onClick={() => {
+                                setExpandedGroups((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(group.id)) {
+                                    next.delete(group.id);
+                                  } else {
+                                    next.add(group.id);
+                                  }
+                                  return next;
+                                });
+                              }}
+                            >
+                              <span>{group.label}</span>
+                              <span className="text-[10px] text-slate-400">
+                                ({selectedInGroup}/{group.subFilters.length}){" "}
+                                {expanded ? "▲" : "▼"}
+                              </span>
+                            </button>
+                          </div>
+
+                          {expanded && (
+                            <div className="mt-2 space-y-1 pl-7">
+                              {group.subFilters.map((sub) => {
+                                const checked = selectedFilters.has(sub.id);
+                                return (
+                                  <label
+                                    key={sub.id}
+                                    className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-slate-800/50 cursor-pointer"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-[#00DAEE]"
+                                      checked={checked}
+                                      onChange={() => {
+                                        setSelectedFilters((prev) => {
+                                          const next = new Set(prev);
+                                          if (next.has(sub.id)) {
+                                            next.delete(sub.id);
+                                          } else {
+                                            next.add(sub.id);
+                                          }
+                                          return next;
+                                        });
+                                      }}
+                                    />
+                                    <span>{sub.label}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
               </div>
             )}
+            </div>
           </div>
         </div>
 
