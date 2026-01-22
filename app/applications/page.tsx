@@ -25,32 +25,40 @@ export default function ApplicationsPage() {
     removeTrackedJob,
     updateStatus,
   } = useTracker();
+  const applicationStageOptions = APPLICATION_STATUSES.filter(
+    (status) => status !== "interested",
+  );
 
   const jobsBySlug = useMemo(() => {
     const map = new Map(todaysJobs.map((job) => [job.slug, job]));
     return map;
   }, []);
+  const todoJobs = useMemo(
+    () => trackedJobs.filter((job) => job.status === "interested"),
+    [trackedJobs],
+  );
+  const appliedJobs = useMemo(
+    () => trackedJobs.filter((job) => job.status !== "interested"),
+    [trackedJobs],
+  );
 
   return (
     <main className="min-h-screen px-6 py-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <header>
           <p className="text-sm text-slate-400">
-            Track your open applications and interviews.
+            Track your applications and interviews here.
           </p>
         </header>
 
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-slate-100">
-              My applications
-            </h1>
-            <span className="text-xs text-slate-400">
-              {trackedJobs.length} tracked
-            </span>
-          </div>
-
-          {trackedJobs.length === 0 ? (
+        {trackedJobs.length === 0 ? (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-semibold text-slate-100">
+                My applications
+              </h1>
+              <span className="text-xs text-slate-400">0 tracked</span>
+            </div>
             <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/60 px-6 py-8 text-center">
               <p className="text-sm text-slate-300">
                 You haven&apos;t added any jobs to your tracker yet.
@@ -63,91 +71,179 @@ export default function ApplicationsPage() {
                 and tap the ➕ icon on roles you care about.
               </p>
             </div>
-          ) : (
-            <div className="rounded-2xl border border-slate-300 dark:border-slate-800/50 bg-slate-900/60">
-              {/* ONE SHARED DIVIDER FOR HEADER + ROWS */}
-              <div className="divide-y divide-slate-300/50 dark:divide-slate-800/50">
-                
-                {/* HEADER ROW — NO BORDER */}
-                <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr_80px] gap-3 px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  <span>Role</span>
-                  <span>Company</span>
-                  <span>Stage</span>
-                  <span>Date applied</span>
-                  <span className="text-right">Actions</span>
-                </div>
-
-                {/* DATA ROWS */}
-                {trackedJobs.map((tracked) => {
-                  const job = jobsBySlug.get(tracked.jobSlug);
-                  const appliedOn = tracked.dateApplied
-                    ? new Date(tracked.dateApplied).toLocaleDateString()
-                    : "—";
-
-                  return (
-                    <div
-                      key={tracked.id}
-                      className="grid grid-cols-[1.6fr_1fr_1fr_1fr_80px] items-center gap-3 px-4 py-3 text-sm text-slate-200"
-                    >
-                      <div>
-                        {job ? (
-                          <Link
-                            href={`/jobs/${job.slug}`}
-                            className="font-medium text-[#00DAEE] underline-offset-4 hover:underline"
-                          >
-                            {job.role}
-                          </Link>
-                        ) : (
-                          <p className="font-medium">{tracked.jobSlug}</p>
-                        )}
-                        <p className="text-xs text-slate-500">
-                          {job?.location ?? "Unknown location"}
-                        </p>
-                      </div>
-
-                      <div>{job?.company ?? "Unknown company"}</div>
-
-                      <div className="space-y-1">
-                        <label className="sr-only" htmlFor={`status-${tracked.id}`}>
-                          Status
-                        </label>
-                        <select
-                          id={`status-${tracked.id}`}
-                          value={tracked.status}
-                          onChange={(event) =>
-                            updateStatus(
-                              tracked.jobSlug,
-                              event.target.value as ApplicationStatus,
-                            )
-                          }
-                          className="w-40 rounded-lg border border-slate-700 bg-slate-900/60 px-2 py-1 text-xs text-slate-100 focus:border-[#00DAEE] focus:outline-none"
-                        >
-                          {APPLICATION_STATUSES.map((status) => (
-                            <option key={status} value={status}>
-                              {formatOptionLabel(status)}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="text-xs text-slate-400">{appliedOn}</div>
-
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => removeTrackedJob(tracked.jobSlug)}
-                          className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-red-400 hover:text-red-300"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+          </section>
+        ) : (
+          <>
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h1 className="text-xl font-semibold text-slate-100">
+                  To-do list
+                </h1>
+                <span className="text-xs text-slate-400">
+                  {todoJobs.length} roles
+                </span>
               </div>
-            </div>
-          )}
-        </section>
+
+              {todoJobs.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/60 px-6 py-6 text-center text-sm text-slate-400">
+                  No roles to apply to right now.
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-slate-300 dark:border-slate-800/50 bg-slate-900/60">
+                  <div className="divide-y divide-slate-300/50 dark:divide-slate-800/50">
+                    <div className="grid grid-cols-[1.6fr_1fr_180px] gap-3 px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <span>Role</span>
+                      <span>Company</span>
+                      <span className="text-right">Action</span>
+                    </div>
+
+                    {todoJobs.map((tracked) => {
+                      const job = jobsBySlug.get(tracked.jobSlug);
+
+                      return (
+                        <div
+                          key={tracked.id}
+                          className="grid grid-cols-[1.6fr_1fr_180px] items-center gap-3 px-4 py-3 text-sm text-slate-200"
+                        >
+                          <div>
+                            {job ? (
+                              <Link
+                                href={`/jobs/${job.slug}`}
+                                className="font-medium text-[#00DAEE] underline-offset-4 hover:underline"
+                              >
+                                {job.role}
+                              </Link>
+                            ) : (
+                              <p className="font-medium">{tracked.jobSlug}</p>
+                            )}
+                            <p className="text-xs text-slate-500">
+                              {job?.location ?? "Unknown location"}
+                            </p>
+                          </div>
+
+                          <div>{job?.company ?? "Unknown company"}</div>
+
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateStatus(tracked.jobSlug, "applied")
+                              }
+                              className="rounded-full bg-[#00DAEE] px-4 py-2 text-xs font-semibold text-slate-900 transition hover:bg-[#7EF2FF]"
+                            >
+                              Mark as applied
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-slate-100">
+                  My applications
+                </h2>
+                <span className="text-xs text-slate-400">
+                  {appliedJobs.length} tracked
+                </span>
+              </div>
+
+              {appliedJobs.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/60 px-6 py-6 text-center text-sm text-slate-400">
+                  Nothing applied yet. Mark a role above to get started.
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-slate-300 dark:border-slate-800/50 bg-slate-900/60">
+                  <div className="divide-y divide-slate-300/50 dark:divide-slate-800/50">
+                    <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr_80px] gap-3 px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      <span>Role</span>
+                      <span>Company</span>
+                      <span>Stage</span>
+                      <span>Date applied</span>
+                      <span className="text-right">Actions</span>
+                    </div>
+
+                    {appliedJobs.map((tracked) => {
+                      const job = jobsBySlug.get(tracked.jobSlug);
+                      const appliedOn = tracked.dateApplied
+                        ? new Date(tracked.dateApplied).toLocaleDateString()
+                        : "—";
+
+                      return (
+                        <div
+                          key={tracked.id}
+                          className="grid grid-cols-[1.6fr_1fr_1fr_1fr_80px] items-center gap-3 px-4 py-3 text-sm text-slate-200"
+                        >
+                          <div>
+                            {job ? (
+                              <Link
+                                href={`/jobs/${job.slug}`}
+                                className="font-medium text-[#00DAEE] underline-offset-4 hover:underline"
+                              >
+                                {job.role}
+                              </Link>
+                            ) : (
+                              <p className="font-medium">{tracked.jobSlug}</p>
+                            )}
+                            <p className="text-xs text-slate-500">
+                              {job?.location ?? "Unknown location"}
+                            </p>
+                          </div>
+
+                          <div>{job?.company ?? "Unknown company"}</div>
+
+                          <div className="space-y-1">
+                            <label
+                              className="sr-only"
+                              htmlFor={`status-${tracked.id}`}
+                            >
+                              Status
+                            </label>
+                            <select
+                              id={`status-${tracked.id}`}
+                              value={tracked.status}
+                              onChange={(event) =>
+                                updateStatus(
+                                  tracked.jobSlug,
+                                  event.target.value as ApplicationStatus,
+                                )
+                              }
+                              className="w-40 rounded-lg border border-slate-700 bg-slate-900/60 px-2 py-1 text-xs text-slate-100 focus:border-[#00DAEE] focus:outline-none"
+                            >
+                              {applicationStageOptions.map((status) => (
+                                <option key={status} value={status}>
+                                  {formatOptionLabel(status)}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="text-xs text-slate-400">
+                            {appliedOn}
+                          </div>
+
+                          <div className="flex justify-end">
+                            <button
+                              type="button"
+                              onClick={() => removeTrackedJob(tracked.jobSlug)}
+                              className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-red-400 hover:text-red-300"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </section>
+          </>
+        )}
       </div>
     </main>
   );
