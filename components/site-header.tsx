@@ -8,6 +8,7 @@ import { useTheme } from "@/components/theme-provider";
 const tabs = [
   { id: "tracker", href: "/tracker", label: "Tracker" },
   { id: "applications", href: "/applications", label: "Applications" },
+  { id: "alerts", href: "/alerts", label: "Alerts" },
   { id: "ask-ai", href: "/ask-ai", label: "Ask AI" },
   { id: "cv-help", href: "/cv-help", label: "CV Help" },
 ];
@@ -16,6 +17,7 @@ function getActiveTab(pathname: string): string {
   if (pathname.startsWith("/ask-ai")) return "ask-ai";
   if (pathname.startsWith("/cv-help")) return "cv-help";
   if (pathname.startsWith("/applications")) return "applications";
+  if (pathname.startsWith("/alerts")) return "alerts";
   if (pathname.startsWith("/jobs")) return "tracker"; // job pages still highlight Tracker
   return "tracker";
 }

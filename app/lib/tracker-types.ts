@@ -1,11 +1,16 @@
 export type ApplicationStatus =
   | "interested"
   | "applied"
-  | "online test"
-  | "video interview"
-  | "first interview"
-  | "further interview"
-  | "final stage"
+  | "online test - to do"
+  | "online test - complete"
+  | "video interview - to do"
+  | "video interview - complete"
+  | "first interview - pending"
+  | "first interview - complete"
+  | "further interview - pending"
+  | "further interview - complete"
+  | "final stage - pending"
+  | "final stage - complete"
   | "offer"
   | "rejected";
 
@@ -21,11 +26,16 @@ export type TrackedJob = {
 export const APPLICATION_STATUSES: ApplicationStatus[] = [
   "interested",
   "applied",
-  "online test",
-  "video interview",
-  "first interview",
-  "further interview",
-  "final stage",
+  "online test - to do",
+  "online test - complete",
+  "video interview - to do",
+  "video interview - complete",
+  "first interview - pending",
+  "first interview - complete",
+  "further interview - pending",
+  "further interview - complete",
+  "final stage - pending",
+  "final stage - complete",
   "offer",
   "rejected",
 ];
