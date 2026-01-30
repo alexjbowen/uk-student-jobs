@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 import { SiteHeader } from "@/components/site-header";
@@ -28,23 +29,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="light">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
-      >
-        <ThemeProvider>
-          <TrackerProvider>
-            {/* GLOBAL HEADER */}
-            <SiteHeader />
+    <ClerkProvider>
+      <html lang="en" data-theme="light">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
+        >
+          <ThemeProvider>
+            <TrackerProvider>
+              {/* GLOBAL HEADER */}
+              <SiteHeader />
 
-            {/* PAGE CONTENT */}
-            <main className="flex-1">{children}</main>
+              {/* PAGE CONTENT */}
+              <main className="flex-1">{children}</main>
 
-            {/* GLOBAL FOOTER */}
-            <SiteFooter />
-          </TrackerProvider>
-        </ThemeProvider>
-      </body>
-    </html>
+              {/* GLOBAL FOOTER */}
+              <SiteFooter />
+            </TrackerProvider>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

@@ -476,7 +476,8 @@ export default function TrackerPage() {
               Today&apos;s new roles
             </h2>
             <span className="text-xs text-slate-400">
-              {todaysReleases.length} roles • {new Date().toLocaleDateString()}
+              {todaysReleases.length} roles •{" "}
+              {new Date().toLocaleDateString("en-GB")}
             </span>
           </div>
 

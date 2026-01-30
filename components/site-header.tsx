@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 import { useTheme } from "@/components/theme-provider";
 
@@ -68,6 +69,18 @@ export function SiteHeader() {
             <span className="h-4 w-4 rounded-full bg-white" />
           </span>
         </button>
+        <div className="ml-4 flex items-center gap-2">
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="text-sm font-medium hover:underline">
+                Sign In
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+        </div>
       </nav>
     </header>
   );
