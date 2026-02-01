@@ -10,7 +10,7 @@ export default function Home() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950">
       <span className="text-sm font-medium text-slate-200">
-        Loading UK Grad Jobs...
+        Loading...
       </span>
     </div>
   );

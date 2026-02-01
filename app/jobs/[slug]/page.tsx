@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddToTrackerButton } from "@/components/add-to-tracker-button";
-import { getJobBySlug } from "@/app/lib/jobs-data";
+import { getJobBySlug } from "@/app/lib/jobs-db";
 
 type JobPageProps = {
   params: Promise<{ slug: string }>;
@@ -12,7 +12,7 @@ type JobPageProps = {
 
 export default async function JobPage({ params }: JobPageProps) {
   const { slug } = await params;
-  const job = getJobBySlug(slug);
+  const job = await getJobBySlug(slug);
 
   if (!job) {
     notFound();
@@ -56,13 +56,6 @@ export default async function JobPage({ params }: JobPageProps) {
               )}
 
               <AddToTrackerButton jobSlug={job.slug} />
-
-              <Link
-                href={`/?tab=ask-ai&job=${job.slug}`}
-                className="rounded-full border border-[#00DAEE]/70 bg-slate-900 px-4 py-2 text-sm text-[#00DAEE] hover:bg-slate-800"
-              >
-                Ask AI about this job
-              </Link>
             </div>
           </div>
 

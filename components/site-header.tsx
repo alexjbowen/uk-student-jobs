@@ -10,13 +10,9 @@ const tabs = [
   { id: "tracker", href: "/tracker", label: "Tracker" },
   { id: "applications", href: "/applications", label: "Applications" },
   { id: "alerts", href: "/alerts", label: "Alerts" },
-  { id: "ask-ai", href: "/ask-ai", label: "Ask AI" },
-  { id: "cv-help", href: "/cv-help", label: "CV Help" },
 ];
 
 function getActiveTab(pathname: string): string {
-  if (pathname.startsWith("/ask-ai")) return "ask-ai";
-  if (pathname.startsWith("/cv-help")) return "cv-help";
   if (pathname.startsWith("/applications")) return "applications";
   if (pathname.startsWith("/alerts")) return "alerts";
   if (pathname.startsWith("/jobs")) return "tracker"; // job pages still highlight Tracker
@@ -29,7 +25,7 @@ export function SiteHeader() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="w-full border-b border-slate-800 bg-slate-900/80 backdrop-blur flex items-center justify-between px-6 py-3">
+    <header className="sticky top-0 z-50 flex w-full items-center justify-between border-b border-slate-800 bg-slate-900/80 px-6 py-3 backdrop-blur">
       <div className="text-lg font-semibold">
         UK Grad Jobs{" "}
         <span className="text-xs text-slate-400">
