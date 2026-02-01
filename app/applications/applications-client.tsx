@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTracker } from "@/components/tracker-provider";
 import { type Job } from "@/app/lib/jobs-data";
 import { SignInButton, useUser } from "@clerk/nextjs";
@@ -91,10 +91,45 @@ export function ApplicationsClient({ jobs }: ApplicationsClientProps) {
   );
   const [isStageFilterOpen, setIsStageFilterOpen] = useState(false);
 
+  useEffect(() => {
+    let isActive = true;
+
+    if (!isSignedIn) {
+      return;
+    }
+
+    const loadGoal = async () => {
+      try {
+        const response = await fetch("/api/goals", {
+          credentials: "include",
+        });
+        if (!response.ok) {
+          return;
+        }
+        const payload = (await response.json()) as {
+          data?: { period: GoalPeriod; target: number; isNoGoal: boolean };
+        };
+        if (isActive && payload.data) {
+          setGoalPeriod(payload.data.period);
+          setGoalCount(payload.data.target);
+          setIsNoGoal(payload.data.isNoGoal);
+        }
+      } catch {
+        // Ignore fetch errors to avoid blocking UI.
+      }
+    };
+
+    loadGoal();
+
+    return () => {
+      isActive = false;
+    };
+  }, [isSignedIn]);
+
   const jobsBySlug = useMemo(() => {
     const map = new Map(jobs.map((job) => [job.slug, job]));
     return map;
-  }, []);
+  }, [jobs]);
   const todoJobs = useMemo(
     () => trackedJobs.filter((job) => job.status === "interested"),
     [trackedJobs],
@@ -354,7 +389,22 @@ export function ApplicationsClient({ jobs }: ApplicationsClientProps) {
                 <div className="flex justify-end">
                   <button
                     type="button"
-                    onClick={() => setIsGoalEditorOpen(false)}
+                    onClick={async () => {
+                      setIsGoalEditorOpen(false);
+                      if (!isSignedIn) {
+                        return;
+                      }
+                      await fetch("/api/goals", {
+                        method: "PUT",
+                        credentials: "include",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          period: goalPeriod,
+                          target: goalCount,
+                          isNoGoal,
+                        }),
+                      });
+                    }}
                     className="rounded-full bg-[#00DAEE] px-4 py-2 text-xs font-semibold text-slate-900 transition hover:bg-[#7EF2FF]"
                   >
                     Save goal
