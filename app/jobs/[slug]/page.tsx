@@ -34,13 +34,8 @@ export default async function JobPage({ params }: JobPageProps) {
         {/* HEADER WITH BUTTONS INLINE */}
         <header className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            {/* TITLE + BADGE */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-2xl font-semibold">{job.role}</h1>
-              <span className="rounded-full border border-[#00DAEE]/60 bg-[#00DAEE]/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#00DAEE]">
-                {job.posted}
-              </span>
-            </div>
+            {/* TITLE */}
+            <h1 className="text-2xl font-semibold">{job.role}</h1>
 
             {/* ACTION BUTTONS */}
             <div className="flex flex-wrap gap-2">

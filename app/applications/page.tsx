@@ -1,8 +1,8 @@
-import { getAllJobs } from "@/app/lib/jobs-db";
+import { getAllInternships, getAllJobs } from "@/app/lib/jobs-db";
 import { ApplicationsClient } from "@/app/applications/applications-client";
 
 export default async function ApplicationsPage() {
-  const jobs = await getAllJobs();
+  const [jobs, internships] = await Promise.all([getAllJobs(), getAllInternships()]);
 
-  return <ApplicationsClient jobs={jobs} />;
+  return <ApplicationsClient jobs={[...jobs, ...internships]} />;
 }

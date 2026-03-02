@@ -60,17 +60,18 @@ const FILTER_GROUPS = [
     id: "finance",
     label: "Finance",
     subFilters: [
-      { id: "finance-investment-banking", label: "Investment Banking (IB)" },
+      { id: "finance-investment-banking", label: "Investment Banking" },
       { id: "finance-sales-trading", label: "Sales & Trading" },
       { id: "finance-asset-management", label: "Asset Management" },
-      { id: "finance-private-equity", label: "Private Equity (PE)" },
-      { id: "finance-venture-capital", label: "Venture Capital (VC)" },
+      { id: "finance-private-equity", label: "Private Equity" },
+      { id: "finance-venture-capital", label: "Venture Capital" },
       { id: "finance-hedge-funds", label: "Hedge Funds" },
       { id: "finance-wealth-banking", label: "Wealth / Private Banking" },
       { id: "finance-corporate-banking", label: "Corporate Banking" },
       { id: "finance-risk", label: "Risk" },
-      { id: "finance-quant-finance", label: "Quantitative Finance / Research" },
+      { id: "finance-quant", label: "Quant" },
       { id: "finance-fintech", label: "Fintech" },
+      { id: "finance-miscellaneous", label: "Miscellaneous" },
     ],
   },
   {
@@ -89,11 +90,11 @@ const FILTER_GROUPS = [
     id: "technology",
     label: "Technology",
     subFilters: [
-      { id: "technology-swe", label: "Software Engineering (SWE)" },
-      { id: "technology-data-science", label: "Data Science / ML" },
-      { id: "technology-data-analyst", label: "Data Analyst / BI" },
+      { id: "technology-swe", label: "Software Engineering" },
+      { id: "technology-data-science", label: "Data Science" },
+      { id: "technology-data-analyst", label: "Data Analyst" },
       { id: "technology-cybersecurity", label: "Cybersecurity" },
-      { id: "technology-product", label: "Product Management (Tech)" },
+      { id: "technology-product", label: "Product Management" },
       { id: "technology-cloud-devops", label: "Cloud / DevOps / Infrastructure" },
       { id: "technology-quant-engineering", label: "Quant Engineering" },
     ],
@@ -113,10 +114,11 @@ const FILTER_GROUPS = [
   },
 ];
 
-type Segment = "finance" | "technology" | "engineering";
+type Segment = "finance" | "consulting" | "technology" | "engineering";
 
 const SEGMENT_GROUPS: Record<Segment, string[]> = {
-  finance: ["finance", "consulting"],
+  finance: ["finance"],
+  consulting: ["consulting"],
   technology: ["technology"],
   engineering: ["engineering"],
 };
@@ -127,12 +129,16 @@ function filterIdsForSegment(segment: Segment) {
   ).flatMap((group) => group.subFilters.map((sub) => sub.id));
 }
 
+type RoleType = "grad" | "intern";
+
 type TrackerClientProps = {
   jobs: Job[];
+  internships: Job[];
 };
 
-export function TrackerClient({ jobs }: TrackerClientProps) {
+export function TrackerClient({ jobs, internships }: TrackerClientProps) {
   const router = useRouter();
+  const [roleType, setRoleType] = useState<RoleType>("grad");
   const [segment, setSegment] = useState<Segment>("finance");
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(
     () => new Set(filterIdsForSegment("finance")),
@@ -166,7 +172,9 @@ export function TrackerClient({ jobs }: TrackerClientProps) {
     return release.toDateString() === today.toDateString();
   };
 
-  const filteredJobs = jobs.filter((job) =>
+  const activeJobs = roleType === "grad" ? jobs : internships;
+
+  const filteredJobs = activeJobs.filter((job) =>
     job.filterTags.some((tag) => selectedFilters.has(tag)),
   );
 
@@ -282,8 +290,9 @@ export function TrackerClient({ jobs }: TrackerClientProps) {
           </div>
 
           <div className="flex flex-col gap-2 text-xs sm:text-sm sm:items-end">
+            {/* Row 1: sector pills */}
             <div className="flex gap-2">
-              {(["finance", "technology", "engineering"] as Segment[]).map(
+              {(["finance", "consulting", "technology", "engineering"] as Segment[]).map(
                 (key) => (
                   <button
                     key={key}
@@ -301,37 +310,37 @@ export function TrackerClient({ jobs }: TrackerClientProps) {
               )}
             </div>
 
-            <div className="relative">
+            {/* Row 2: role type on left, filters on right */}
+            <div className="flex w-full items-center justify-between gap-2">
+              <div className="flex gap-2">
+                {(["grad", "intern"] as RoleType[]).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setRoleType(type)}
+                    className={`rounded-full border px-4 py-2 transition ${
+                      roleType === type
+                        ? "border-[#00DAEE] text-[#00DAEE]"
+                        : "border-slate-700 text-slate-300 hover:border-[#00DAEE]"
+                    }`}
+                  >
+                    {type === "grad" ? "Grad Roles" : "Internships"}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsFilterMenuOpen((prev) => !prev)}
                 className="rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-slate-200 hover:border-[#00DAEE] hover:text-[#00DAEE] flex items-center gap-2"
               >
-                <span>Filter sectors</span>
-                <span className="text-[11px] text-slate-400">
-                  ({selectedFilters.size}/{visibleFilterIds.length})
-                </span>
+                <span>Filters</span>
                 <span aria-hidden>{isFilterMenuOpen ? "▲" : "▼"}</span>
               </button>
 
               {isFilterMenuOpen && (
                 <div className="absolute right-0 z-20 mt-2 w-72 rounded-2xl border border-slate-800 bg-slate-900/95 p-4 text-xs text-slate-200 shadow-lg space-y-3">
-                  <button
-                    type="button"
-                    className="w-full rounded-lg border border-slate-700 px-3 py-2 text-left text-[11px] uppercase tracking-wide text-slate-300 hover:border-[#00DAEE]"
-                    onClick={() => {
-                      const allSelected =
-                        selectedFilters.size === visibleFilterIds.length;
-                      setSelectedFilters(
-                        allSelected ? new Set() : new Set(visibleFilterIds),
-                      );
-                    }}
-                  >
-                    {selectedFilters.size === visibleFilterIds.length
-                      ? "Deselect all"
-                      : "Select all"}
-                  </button>
-
                   <div className="space-y-2">
                     {visibleGroups.map((group) => {
                       const selectedInGroup = group.subFilters.filter((sub) =>
@@ -342,43 +351,6 @@ export function TrackerClient({ jobs }: TrackerClientProps) {
                       const partiallySelected =
                         selectedInGroup > 0 && !allSelected;
                       const expanded = expandedGroups.has(group.id);
-                      const flatten =
-                        visibleGroups.length === 1 &&
-                        (segment === "technology" || segment === "engineering");
-
-                      if (flatten) {
-                        return (
-                          <div key={group.id} className="space-y-1">
-                            {group.subFilters.map((sub) => {
-                              const checked = selectedFilters.has(sub.id);
-                              return (
-                                <label
-                                  key={sub.id}
-                                  className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-slate-800/50 cursor-pointer"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    className="h-4 w-4 rounded border-slate-600 bg-slate-900 text-[#00DAEE]"
-                                    checked={checked}
-                                    onChange={() => {
-                                      setSelectedFilters((prev) => {
-                                        const next = new Set(prev);
-                                        if (next.has(sub.id)) {
-                                          next.delete(sub.id);
-                                        } else {
-                                          next.add(sub.id);
-                                        }
-                                        return next;
-                                      });
-                                    }}
-                                  />
-                                  <span>{sub.label}</span>
-                                </label>
-                              );
-                            })}
-                          </div>
-                        );
-                      }
 
                       return (
                         <div
@@ -424,16 +396,33 @@ export function TrackerClient({ jobs }: TrackerClientProps) {
                                 });
                               }}
                             >
-                              <span>{group.label}</span>
+                              <span>Filter by sector</span>
                               <span className="text-[10px] text-slate-400">
-                                ({selectedInGroup}/{group.subFilters.length}){" "}
-                                {expanded ? "▲" : "▼"}
+                                {selectedInGroup}/{group.subFilters.length}{" "}{expanded ? "▲" : "▼"}
                               </span>
                             </button>
                           </div>
 
                           {expanded && (
                             <div className="mt-2 space-y-1 pl-7">
+                              <button
+                                type="button"
+                                className="w-full rounded-lg border border-slate-700 px-3 py-1.5 text-left text-[11px] uppercase tracking-wide text-slate-300 hover:border-[#00DAEE] mb-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedFilters((prev) => {
+                                    const next = new Set(prev);
+                                    if (allSelected) {
+                                      group.subFilters.forEach((sub) => next.delete(sub.id));
+                                    } else {
+                                      group.subFilters.forEach((sub) => next.add(sub.id));
+                                    }
+                                    return next;
+                                  });
+                                }}
+                              >
+                                {allSelected ? "Deselect all" : "Select all"}
+                              </button>
                               {group.subFilters.map((sub) => {
                                 const checked = selectedFilters.has(sub.id);
                                 return (
@@ -469,6 +458,7 @@ export function TrackerClient({ jobs }: TrackerClientProps) {
                   </div>
               </div>
             )}
+            </div>
             </div>
           </div>
         </div>
